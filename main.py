@@ -11,7 +11,7 @@ config.read("config.ini")
 embCtx = EmbedderContext(config["DEFAULT"]["EMBEDDING_MODEL_PATH"])
 
 #setting the current profile which would be selected by the car
-embCtx.currentProfile = "alex"
+embCtx.currentProfile = "test"
 
 #rate in which samples are being taken
 embFrameRate = 5;
