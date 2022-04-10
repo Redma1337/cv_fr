@@ -1,17 +1,25 @@
 import cv2
 import numpy as np
-from embedding import EmbeddingManager
+from embedding import EmbedderContext
 from modelmanager import ModelManager
+import configparser
+
+config = configparser.ConfigParser()
+config.read("config.ini")
 
 #data manager for handling recognizer vectors
-embManager = EmbeddingManager("models/openface.nn4.small2.v1.t7")
-embManager.setProfile("alex")
+embCtx = EmbedderContext(config["DEFAULT"]["EMBEDDING_MODEL_PATH"])
+
+#setting the current profile which would be selected by the car
+embCtx.currentProfile = "alex"
+
+#rate in which samples are being taken
 embFrameRate = 5;
 
 #model manager for handling actual image processing
 modelManager = ModelManager(
-    "models/deploy.prototxt.txt",
-    "models/res10_300x300_ssd_iter_140000.caffemodel"
+    config["DEFAULT"]["CAFFE_PROTO_PATH"],
+    config["DEFAULT"]["CAFFE_MODEL_PATH"],
 )
 
 print("Initialising Camera...")
@@ -32,16 +40,27 @@ while True:
 
     h, w = frame.shape[:2]
     
+    #only get one face since we only assume one driver
     modelManager.detectFace(frame)
 
+    #assure our guess was somewhat exact
     confidence = modelManager.getConfidence(0)
     if confidence > 0.7:
         (x, y, x1, y1) = modelManager.getFaceBounds(0, w, h)
-        cv2.rectangle(img=frame, pt1=(x, y), pt2=(x1, y1), color=(0, 0, 255))
+        cv2.rectangle(
+            img=frame,
+            pt1=(x, y),
+            pt2=(x1, y1), 
+            color=(0, 0, 255)
+        )
 
+        #to make samples more accurate we are cutting the face region out
         roiFrame = frame[y:y1, x:x1]
+
         if (frameId % embFrameRate == 0):
-            embManager.processFrame(roiFrame)
+            embCtx.process(roiFrame)
+
+        cv2.putText(frame, "{} {:.2f}%".format(embCtx.resultName, embCtx.resultProb), (x,y-15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255))
 
     cv2.imshow('frame', frame)
     if cv2.waitKey(1) == ord('q'):

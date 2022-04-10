@@ -15,6 +15,10 @@ class ModelManager:
         if not self.net:
             print("Failed to load caffe model")
 
+    """
+    serializes the input image and runs it through the model
+    calcualted values will be managed by this class
+    """
     def detectFace(self, frame, debug=False):
         resizedFrame = cv2.resize(frame, self.blobConfig["dim"])
         frameBlob = cv2.dnn.blobFromImage(resizedFrame, self.blobConfig["scale"], self.blobConfig["dim"], self.blobConfig["meanVals"])
@@ -33,6 +37,7 @@ class ModelManager:
         
         return self.data[0, 0, index, 2]
 
+    #returns the mapped face bounds of a specific index
     def getFaceBounds(self, index, width, height):
         if not self.data.any():
             print("No loaded data found...")
