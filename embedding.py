@@ -21,6 +21,9 @@ class EmbedderContext:
     _currentProfile = None
 
     def __init__(self, embedderPath) -> None:
+        if not self.profileDir.exists():
+            self.profileDir.mkdir()
+
         print("Loading embedder model... ")
         self.embedder = cv2.dnn.readNetFromTorch(embedderPath)
 
