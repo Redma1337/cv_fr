@@ -43,24 +43,26 @@ while True:
     #only get one face since we only assume one driver
     modelManager.detectFace(frame)
 
-    #assure our guess was somewhat exact
-    confidence = modelManager.getConfidence(0)
-    if confidence > 0.7:
-        (x, y, x1, y1) = modelManager.getFaceBounds(0, w, h)
-        cv2.rectangle(
-            img=frame,
-            pt1=(x, y),
-            pt2=(x1, y1), 
-            color=(0, 0, 255)
-        )
+    if (modelManager.facesCount > 0):
+        #assure our guess was somewhat exact
+        confidence = modelManager.getConfidence(0)
+        if confidence > 0.7:
+            (x, y, x1, y1) = modelManager.getFaceBounds(0, w, h)
+            cv2.rectangle(
+                img=frame,
+                pt1=(x, y),
+                pt2=(x1, y1), 
+                color=(0, 0, 255)
+            )
 
-        #to make samples more accurate we are cutting the face region out
-        roiFrame = frame[y:y1, x:x1]
+            #to make samples more accurate we are cutting the face region out
+            roiFrame = frame[y:y1, x:x1]
 
-        if (frameId % embFrameRate == 0):
-            embCtx.process(roiFrame)
+            if (frameId % embFrameRate == 0):
+                embCtx.process(roiFrame)
 
-        cv2.putText(frame, "{} {:.2f}%".format(embCtx.resultName, embCtx.resultProb), (x,y-15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255))
+            cv2.putText(frame, "{}".format(embCtx.currentProfile), (5, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255))
+            cv2.putText(frame, "{:.2f}%".format(embCtx.resultProb), (x,y-15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255))
 
     cv2.imshow('frame', frame)
     if cv2.waitKey(1) == ord('q'):
